@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "target": "http://localhost:8080",
+  "peer_target": "http://localhost:8081",
+  "utc": "2026-09-13T16:53:40Z",
+  "checks": [
+    {
+      "name": "race_free_get_or_create",
+      "passed": true,
+      "requests": 50,
+      "distinct_wallets": 1
+    },
+    {
+      "name": "idempotent_retry_storm",
+      "passed": true,
+      "requests": 30,
+      "distinct_transfers": 1,
+      "applied_debits": 1
+    },
+    {
+      "name": "different_body_conflicts_and_lost_response_replay",
+      "passed": true
+    },
+    {
+      "name": "declined_retry_storm_and_stable_decline_after_funding",
+      "passed": true
+    },
+    {
+      "name": "conservation_under_contention",
+      "passed": true,
+      "transfers": 500,
+      "concurrency": 30,
+      "total_before_paise": 4000000,
+      "total_after_paise": 4000000,
+      "minimum_balance_paise": 8342,
+      "completed": 450,
+      "declined": 50,
+      "requests_per_second": 158.19
+    },
+    {
+      "name": "competing_overdraft",
+      "passed": true
+    },
+    {
+      "name": "authorization_and_strict_input_validation",
+      "passed": true
+    },
+    {
+      "name": "observability_metrics",
+      "passed": true
+    }
+  ],
+  "requests": 667,
+  "elapsed_seconds": 8.63,
+  "latency_p50_ms": 153.38,
+  "latency_p99_ms": 1998.33,
+  "server_errors": 0,
+  "notes": "Client timings include connection setup; aggregate includes expected validation errors. No automatic retries mask failures. Independent run uses fresh users."
+}

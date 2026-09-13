@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "scope": "local Docker Compose only",
+  "checks": [
+    {
+      "name": "credit_failure_rolls_back_debit_and_key_then_retry_succeeds",
+      "passed": true
+    },
+    {
+      "name": "hard_app_restart_preserves_balances_and_idempotency",
+      "passed": true
+    },
+    {
+      "name": "database_outage_rejects_writes_then_recovers",
+      "passed": true
+    },
+    {
+      "name": "no_committed_pending_transfers_or_negative_balances",
+      "passed": true
+    }
+  ]
+}

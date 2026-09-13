@@ -1,0 +1,48 @@
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: 80
+spring:
+  application:
+    name: paytm-wallet
+  datasource:
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/wallet}
+    username: ${DB_USER:wallet}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:8}
+      connection-timeout: 10000
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
+  mvc:
+    problemdetails:
+      enabled: false
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health,prometheus
+      path-mapping:
+        prometheus: metrics
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.99
+logging:
+  structured:
+    format:
+      console: logstash
+wallet:
+  admin-key: ${ADMIN_KEY}

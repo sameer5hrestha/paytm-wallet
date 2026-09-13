@@ -1,0 +1,23 @@
+name: Verify wallet
+on: [push, pull_request]
+jobs:
+  invariants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start fresh database
+        run: sh scripts/setup.sh
+      - name: Verify invariants through real HTTP and PostgreSQL
+        run: python3 scripts/burst.py
+      - name: Capture logs
+        if: always()
+        run: mkdir -p evidence && docker compose logs --no-color app > evidence/app.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wallet-evidence
+          path: evidence/
+      - name: Stop containers
+        if: always()
+        run: docker compose down
