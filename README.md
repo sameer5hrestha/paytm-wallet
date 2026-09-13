@@ -2,6 +2,8 @@
 
 Java 17 / Spring Boot 3.5 / PostgreSQL. A runnable demonstration of atomic wallet transfers, durable idempotency, and concurrency verification. This moves **demo balances**, not real money.
 
+**Live API:** https://sameer-paytm-wallet.onrender.com · [Health](https://sameer-paytm-wallet.onrender.com/health) · [Metrics](https://sameer-paytm-wallet.onrender.com/metrics) · [Public domain logs](https://sameer-paytm-wallet.onrender.com/logs). Free hosting sleeps after inactivity; allow up to three minutes for the first health request. The managed demo database expires **13 October 2026**.
+
 ## Start locally
 
 Requires Docker with Compose, OpenSSL, and Python 3 for the benchmark. Maven and Java are provided by the build container.

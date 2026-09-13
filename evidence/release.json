@@ -1,0 +1,15 @@
+{
+  "api_url": "https://sameer-paytm-wallet.onrender.com",
+  "repository": "https://github.com/sameer5hrestha/paytm-wallet",
+  "deployed_code_commit": "999d7364c807bdc8cfdcb1b049a9dc5b947f3e92",
+  "render_service_id": "srv-dajdnvp5efls738hm5q0",
+  "render_deployment_id": "dep-dajeq59594qs73bu641g",
+  "verified_at_utc": "2026-09-13T18:43:37Z",
+  "public_checks_passed": 9,
+  "checked_requests": 669,
+  "server_errors": 0,
+  "database_expiry": "2026-10-13",
+  "plan": "Free",
+  "region": "Singapore",
+  "notes": "Later commits update documentation and captured evidence only. Public logs are a per-instance buffer. No email submission was sent."
+}
