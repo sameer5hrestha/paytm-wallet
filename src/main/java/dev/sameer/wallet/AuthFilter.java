@@ -34,7 +34,7 @@ class AuthFilter extends OncePerRequestFilter {
         res.setHeader("X-Correlation-ID", correlation);
         try {
             String path = req.getRequestURI();
-            if (path.equals("/health") || path.startsWith("/health/") || path.equals("/metrics")) {
+            if (path.equals("/health") || path.startsWith("/health/") || path.equals("/metrics") || path.equals("/logs")) {
                 chain.doFilter(req, res); return;
             }
             String auth = req.getHeader("Authorization");

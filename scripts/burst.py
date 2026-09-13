@@ -2,6 +2,7 @@
 """Black-box invariant benchmark. Standard library only; no tokens in output."""
 import argparse
 import concurrent.futures
+import http.client
 import json
 import math
 import os
@@ -11,6 +12,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 import uuid
 from pathlib import Path
 
@@ -37,19 +39,36 @@ if not admin:
 samples = []
 samples_lock = threading.Lock()
 checks = []
+connections = threading.local()
 
 
-def request(method, path, token=None, body=None, expected=200, base=None):
+def request(method, path, token=None, body=None, expected=200, base=None, timeout=40):
     headers = {"Content-Type": "application/json", "X-Correlation-ID": str(uuid.uuid4())}
     if token:
         headers["Authorization"] = "Bearer " + token
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request((base or args.url).rstrip("/") + path, data=data, headers=headers, method=method)
+    origin = urllib.parse.urlsplit(base or args.url)
+    if origin.scheme not in ("http", "https"):
+        raise ValueError("Only HTTP or HTTPS targets are supported")
+    address = (origin.scheme, origin.hostname, origin.port)
+    cache = getattr(connections, "cache", None)
+    if cache is None:
+        connections.cache = cache = {}
+    connection = cache.get(address)
+    if connection is None:
+        connection_type = http.client.HTTPSConnection if origin.scheme == "https" else http.client.HTTPConnection
+        connection = cache[address] = connection_type(origin.hostname, origin.port, timeout=timeout)
+    connection.timeout = timeout
+    if connection.sock:
+        connection.sock.settimeout(timeout)
     start = time.perf_counter()
     try:
-        response = urllib.request.urlopen(req, timeout=40)
-    except urllib.error.HTTPError as error:
-        response = error
+        connection.request(method, origin.path.rstrip("/") + path, body=data, headers=headers)
+        response = connection.getresponse()
+    except Exception:
+        connection.close()
+        cache.pop(address, None)
+        raise
     with response:
         raw = response.read().decode()
         elapsed = (time.perf_counter() - start) * 1000
@@ -93,8 +112,12 @@ def base(i):
     return args.peer_url if args.peer_url and i % 2 else args.url
 
 
+warmup_start = time.perf_counter()
+request("GET", "/health", timeout=180)
+warmup_seconds = time.perf_counter() - warmup_start
+samples.clear()
 started = time.perf_counter()
-request("GET", "/health")
+print("Health ready; starting invariant checks", flush=True)
 # One new user, fifty callers, one initial endowment.
 a = user(create=False)
 created = storm(50, lambda i: request("POST", "/wallets", a["token"], base=base(i)))
@@ -190,14 +213,27 @@ for name in ("wallet_transfers_recorded_total", "wallet_transfers_declined_insuf
     assert name in metrics, "Missing metric: " + name
 passed("observability_metrics")
 
+# Produce a correlated transfer and replay so public logs can be checked directly.
+logged_body = transfer_body(a, b, 1)
+logged = request("POST", "/transfers", a["token"], logged_body)
+request("POST", "/transfers", a["token"], logged_body)
+public_logs = request("GET", "/logs")
+assert len(public_logs) <= 200
+matching = [e for e in public_logs if e["transfer_id"] == logged["id"]]
+assert {e["event"] for e in matching} == {"transfer_created", "debited", "credited", "idempotent_replay_hit"}
+assert all(e["correlation_id"] for e in matching)
+assert all(set(e) == {"timestamp", "correlation_id", "event", "transfer_id", "status", "reason"} for e in public_logs)
+passed("public_sanitized_domain_logs")
+
 latencies = sorted(x["latency_ms"] for x in samples)
 report = {"passed": True, "target": args.url, "peer_target": args.peer_url,
+          "warmup_seconds": round(warmup_seconds, 2),
           "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "checks": checks,
           "requests": len(samples), "elapsed_seconds": round(time.perf_counter() - started, 2),
           "latency_p50_ms": round(statistics.median(latencies), 2),
           "latency_p99_ms": round(latencies[math.ceil(len(latencies) * .99) - 1], 2),
           "server_errors": sum(x["status"] >= 500 for x in samples),
-          "notes": "Client timings include connection setup; aggregate includes expected validation errors. No automatic retries mask failures. Independent run uses fresh users."}
+          "notes": "Per-thread HTTP connection reuse; initial health/cold-start excluded. Aggregate includes expected validation errors. No automatic retries mask failures. Independent run uses fresh users."}
 output = Path(args.output)
 output.parent.mkdir(parents=True, exist_ok=True)
 output.write_text(json.dumps(report, indent=2) + "\n")

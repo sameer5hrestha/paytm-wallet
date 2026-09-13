@@ -26,6 +26,7 @@ All four business endpoints require `Authorization: Bearer <user-token>`. Respon
 | `POST /admin/users` | 201: create a demo identity; requires the separate ADMIN_KEY bearer token |
 | `GET /health` | Public health, including database connectivity |
 | `GET /metrics` | Public Prometheus metrics; no token or user ID labels |
+| `GET /logs` | Public last 200 committed domain events from this instance; no bearer tokens, wallet IDs, amounts, or user IDs |
 
 Provision a demo user with `{"opening_balance_paise":1000000}`. The response provides `user_id` and a randomly generated bearer `token` once. Only its SHA-256 hash is stored. The opening balance is assigned once when that user creates their wallet; repeated wallet requests cannot mint money. The admin endpoint is a demo funding mechanism outside the transfer invariant, and must never be exposed with a weak/shared public admin secret. Maximum initial funding is 1,000,000,000 paise per user.
 
@@ -97,6 +98,7 @@ Structured domain logs are emitted **after successful commit** and include event
 ```sh
 curl -fsS http://localhost:8080/health
 curl -fsS http://localhost:8080/metrics
+curl -fsS http://localhost:8080/logs
 docker compose logs -f --no-log-prefix app
 ```
 
@@ -111,7 +113,7 @@ wallet_transfers_declined_insufficient_funds_total
 wallet_idempotent_replays_total
 ```
 
-Record the streaming logs while running a burst for submission; hosting-console logs need not be made publicly accessible if a recording is supplied. Never include `.env`, bearer tokens, database credentials, or the recruiter attachments in the public repository.
+The public `/logs` endpoint provides the most recent 200 sanitized domain events, so an evaluator can inspect current activity without a Render account. It is an in-memory, per-instance buffer and resets on restart; it is not an audit ledger. The complete structured console output is retained according to host log retention. Never include `.env`, bearer tokens, database credentials, or the recruiter attachments in the public repository.
 
 ## Deployment and submission
 

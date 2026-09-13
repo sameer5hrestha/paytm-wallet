@@ -25,7 +25,9 @@ public class WalletService {
     private final JdbcTemplate db;
     private final TransactionTemplate tx;
     private final MeterRegistry metrics;
-    WalletService(JdbcTemplate db, PlatformTransactionManager manager, MeterRegistry metrics) {
+    private final PublicEventLog publicLogs;
+    WalletService(JdbcTemplate db, PlatformTransactionManager manager, MeterRegistry metrics, PublicEventLog publicLogs) {
+        this.publicLogs = publicLogs;
         this.db = db; this.metrics = metrics; tx = new TransactionTemplate(manager);
         tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
         tx.setTimeout(15);
@@ -102,6 +104,7 @@ public class WalletService {
         return new Outcome(t, true);
     }
     private void event(String name, Transfer t) {
+        publicLogs.append(name, t);
         LoggerFactory.getLogger(WalletService.class).atInfo().addKeyValue("event", name)
                 .addKeyValue("transfer_id", t.id()).addKeyValue("status", t.status()).addKeyValue("reason", t.reason()).log(name);
     }
