@@ -65,6 +65,8 @@ Errors: 400 invalid input/self-transfer; 401 missing or invalid token; 403 unaut
 python3 scripts/burst.py --transfers 500 --concurrency 30
 # Remote: set ADMIN_KEY securely in your shell; it is not printed or stored in results.
 python3 scripts/burst.py --url https://YOUR-HOST --output evidence/remote.json
+# Alternative: read the admin secret from a private file instead of an environment variable.
+python3 scripts/burst.py --url https://YOUR-HOST --admin-key-file /path/to/private-key.txt --output evidence/remote.json
 ```
 
 Every run provisions fresh identities. It checks 50-way wallet creation, 30-way successful and declined replay storms, conflicting payloads, 500 mixed transfers including opposite directions, aggregate conservation, each wallet's exact expected closing balance, competing overdrafts, API access control, strict input parsing, correlation IDs, and useful metrics. Expected 4xx responses test validation. Any unexpected status, 5xx, balance mismatch, or failed assertion exits nonzero. The generated JSON contains pass/fail evidence and client p50/p99 timings, but no credentials.

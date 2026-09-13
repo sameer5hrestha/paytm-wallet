@@ -1,5 +1,9 @@
 # Deployment runbook
 
+## Selected hosting
+
+Render free Docker web service and free PostgreSQL 17 in Singapore, selected on 13 September 2026. The database provisioned for this exercise expires **13 October 2026**. The selected web-service plan is 0.1 CPU / 512 MB; database is 0.1 CPU / 256 MB / 1 GB storage. Both configuration screens showed **$0/month**. Free web services sleep after inactivity. These cloud limits differ from the local benchmark, so public results must be measured separately. See [Render free-plan documentation](https://render.com/docs/free).
+
 ## Required configuration
 
 Deploy the included Dockerfile as a web service. Set:

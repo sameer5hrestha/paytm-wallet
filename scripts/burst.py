@@ -20,10 +20,13 @@ parser.add_argument("--peer-url", help="Optional second instance sharing the sam
 parser.add_argument("--transfers", type=int, default=500)
 parser.add_argument("--concurrency", type=int, default=30)
 parser.add_argument("--output", default="evidence/benchmark.json")
+parser.add_argument("--admin-key-file", help="Read the admin key from a private local file instead of the environment")
 args = parser.parse_args()
 if args.transfers < 1 or not 1 <= args.concurrency <= 100:
     parser.error("positive transfers and concurrency between 1 and 100 required")
 admin = os.environ.get("ADMIN_KEY")
+if args.admin_key_file:
+    admin = Path(args.admin_key_file).read_text().strip()
 if not admin and args.url in ("http://localhost:8080", "http://127.0.0.1:8080"):
     env = Path(__file__).resolve().parents[1] / ".env"
     if env.exists():
